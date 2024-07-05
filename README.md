@@ -44,9 +44,9 @@ Flags:
       --http-write-timeout=1                                                  HTTP write timeout in seconds ($HTTP_WRITE_TIMEOUT)
 ```
 Run a HTTP server with 
-    /auth/login
+  - /auth/login
         Writes out a simple HTTP page with a user, TOTP code challenge. A successful login sets a Cookie (JWT) and redirects the user. The server limits login attempts to 1 per second and injects a CSRF token into each index page. JWT cookies expire in two hours.
-    /auth/check
+  - /auth/check
         Check makes sure that the JWT Cookie is set & signed (returning HTTP 401 or HTTP 200).
 
 
