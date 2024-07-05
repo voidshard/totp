@@ -297,7 +297,7 @@ func (s *server) loginGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// return the login form with the CSRF token
-	writeIndex(w, sessTkn)
+	writeIndex(w, s.authLoginURL, sessTkn)
 }
 
 // writeCookie writes a cookie to the response.
@@ -311,16 +311,16 @@ func writeCookie(w http.ResponseWriter, name, value string) {
 }
 
 // writeIndex writes the login form to the response.
-func writeIndex(w http.ResponseWriter, csrf string) {
+func writeIndex(w http.ResponseWriter, csrf, loginURL string) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`<html><head><title>Please Log In</title></head>
-<body><form action="/auth/login" method="POST">
+<body><form action="%s" method="POST">
 <input placeholder="username" type="text" name="user">
 <input placeholder="code" type="text" name="token">
 <input type="hidden" name="csrf" value="%s">
 <input type="submit" value="Submit">
-</form></body></html>`, csrf)))
+</form></body></html>`, loginURL, csrf)))
 }
 
 // writeError writes an error message to the response.
