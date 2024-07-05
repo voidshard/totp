@@ -19,12 +19,9 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       volumes:
-        - name: config
-          configMap:
-            name: totp-config
-            items:
-            - key: conf.yaml
-              path: conf.yaml
+        - name: totp-users
+          secret:
+            secretName: totp-users
       containers:
       - name: totp
         image: uristmcdwarf/totp:latest
@@ -58,6 +55,6 @@ spec:
         #- name: OTEL_EXPORTER_OTLP_ENDPOINT -> open telemetry endpoint
         #- name: COOKIE -> name for cookie to use for JWT
         volumeMounts:
-        - name: config
+        - name: totp-users
           mountPath: "/config"
           readOnly: true
