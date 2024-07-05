@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: totp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: totp
+  template:
+    metadata:
+      labels:
+        app: totp
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: totp
+        image: uristmcdwarf/totp:latest
+        args: ["serve"]
+        ports:
+        - containerPort: 8080
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        env:
+        - name: PORT
+          value: "8080"
+        - name: JWT_KEY
+          value: very-secret-key
+        #valueFrom:
+        #    secretKeyRef:
+        #      name: totp_jwt_key
+        #      key: key
+        - name: CSRF_KEY
+          value: another-secret-key
+        # valueFrom:
+        #    secretKeyRef:
+        #      name: totp_csrf_key
+        #      key: key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: totp
+spec:
+  selector:
+    app: totp
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
