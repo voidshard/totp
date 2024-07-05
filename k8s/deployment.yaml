@@ -14,8 +14,17 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        runAsUser: 42000
+        runAsGroup: 42000
         seccompProfile:
           type: RuntimeDefault
+      volumes:
+        - name: config
+          configMap:
+            name: totp-config
+            items:
+            - key: conf.yaml
+              path: conf.yaml
       containers:
       - name: totp
         image: uristmcdwarf/totp:latest
@@ -31,6 +40,8 @@ spec:
         env:
         - name: PORT
           value: "8080"
+        - name: USER_CONFIG
+          value: "/config/conf.yaml"
         - name: JWT_KEY
           value: very-secret-key
         #valueFrom:
@@ -43,15 +54,10 @@ spec:
         #    secretKeyRef:
         #      name: totp_csrf_key
         #      key: key
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: totp
-spec:
-  selector:
-    app: totp
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
+        # Env Vars you probably want to set
+        #- name: OTEL_EXPORTER_OTLP_ENDPOINT -> open telemetry endpoint
+        #- name: COOKIE -> name for cookie to use for JWT
+        volumeMounts:
+        - name: config
+          mountPath: "/config"
+          readOnly: true

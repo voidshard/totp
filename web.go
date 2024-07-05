@@ -311,7 +311,7 @@ func writeCookie(w http.ResponseWriter, name, value string) {
 }
 
 // writeIndex writes the login form to the response.
-func writeIndex(w http.ResponseWriter, csrf, loginURL string) {
+func writeIndex(w http.ResponseWriter, loginURL, csrf string) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(fmt.Sprintf(`<html><head><title>Please Log In</title></head>

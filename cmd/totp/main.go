@@ -24,7 +24,7 @@ type cmdServe struct {
 	JWTKey   string `long:"jwt-key" env:"JWT_KEY" help:"JWT signing key (required when not in debug mode)"`
 	CSRFKey  string `long:"csrf-key" env:"CSRF_KEY" help:"CSRF signing key (recommended)"`
 	Redirect string `long:"redirect" default:"/auth/check" env:"REDIRECT" help:"Redirect URL after login"`
-	LRUSize  int    `long:"lru-size" default:"250" env:"LRU_SIZE" help:"LRU cache size (used for remembering CSRF tokens)"`         // 250
+	LRUSize  int    `long:"lru-size" default:"250" env:"LRU_SIZE" help:"LRU cache size (used for remembering CSRF tokens)"`
 	LRUTTL   int    `long:"lru-ttl" default:"120" env:"LRU_TTL" help:"LRU cache TTL in seconds (used for remembering CSRF tokens)"` // 2 mins
 	JWTTTL   int    `long:"jwt-ttl" default:"7200" env:"JWT_TTL" help:"JWT session TTL in seconds"`                                 // 2 hours
 	LoginURL string `long:"auth-url" default:"/auth/login" env:"LOGIN_URL" help:"Auth URL"`
