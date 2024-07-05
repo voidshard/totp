@@ -307,6 +307,7 @@ func writeCookie(w http.ResponseWriter, name, value string) {
 	cookie.Value = value
 	cookie.Secure = true
 	cookie.HttpOnly = false
+	cookie.Path = "/"
 	http.SetCookie(w, &cookie)
 }
 
