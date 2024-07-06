@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/golang-lru/v2/expirable"
@@ -251,6 +252,7 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 		writeError(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	token = strings.Replace(token, " ", "", -1) // remove spaces
 
 	// load the user from the store
 	userObj, err := s.store.User(user)
@@ -269,6 +271,7 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 
 	// login successful -- generate JWT
 	jwtKey, err := newJWT(s.jwtKey, user, s.jwtSessionTTL)
+	log.Println("User logged in:", userObj.Username)
 	w.Header().Set("Location", s.redirect)
 	writeCookie(w, s.cookieName, jwtKey)
 	w.WriteHeader(http.StatusFound)
