@@ -246,13 +246,12 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := r.Form.Get("token")
+	token := strings.Replace(r.Form.Get("token"), " ", "", -1)
 	if !s.re.MatchString(token) {
 		log.Println("Invalid token:", token)
 		writeError(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	token = strings.Replace(token, " ", "", -1) // remove spaces
 
 	// load the user from the store
 	userObj, err := s.store.User(user)
