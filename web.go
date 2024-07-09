@@ -92,7 +92,7 @@ func ServeHTTP(opts ...WebOption) error {
 	// Set up OpenTelemetry.
 	otelShutdown, err := setupOTelSDK(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 	defer otelShutdown()
 
@@ -113,9 +113,11 @@ func ServeHTTP(opts ...WebOption) error {
 	// Wait for interruption.
 	select {
 	case err = <-srvErr:
+		log.Println("Error starting server:", err)
 		// Error when starting HTTP server.
 		return err
 	case <-ctx.Done():
+		log.Println("Shutting down server")
 		// Wait for first CTRL+C.
 		// Stop receiving signal notifications as soon as possible.
 		stop()
