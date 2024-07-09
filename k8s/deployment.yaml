@@ -34,6 +34,13 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 150Mi
+          limits:
+            cpu: 250m
+            memory: 300Mi
         env:
         - name: PORT
           value: "8080"

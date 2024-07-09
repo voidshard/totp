@@ -1,0 +1,52 @@
+# Nginx deployment that can be used to direct unauthenticated connections to TOTP server.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+data:
+  default.conf: |
+      server {
+        location /auth {
+          proxy_pass http://127.0.0.1:8080;  # TOTP server
+                proxy_set_header X-Original-URI $request_uri;
+        }
+
+        error_page 401 = @error401;
+        location @error401 {
+            return 302 /auth/login;
+        }
+
+        location / {
+          auth_request /auth/check;
+          proxy_pass http://127.0.0.1:8000; # Whatever you're redirecting to
+        }
+      }

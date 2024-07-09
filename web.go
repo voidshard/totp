@@ -2,7 +2,6 @@ package totp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -95,11 +94,7 @@ func ServeHTTP(opts ...WebOption) error {
 	if err != nil {
 		return nil
 	}
-
-	// Handle shutdown properly so nothing leaks.
-	defer func() {
-		err = errors.Join(err, otelShutdown(context.Background()))
-	}()
+	defer otelShutdown()
 
 	// build & start HTTP server.
 	srv := &http.Server{
