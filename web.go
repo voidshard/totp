@@ -131,17 +131,9 @@ func ServeHTTP(opts ...WebOption) error {
 func (s *server) newHTTPHandler() http.Handler {
 	mux := http.NewServeMux()
 
-	// handleFunc is a replacement for mux.HandleFunc
-	// which enriches the handler's HTTP instrumentation with the pattern as the http.route.
-	handleFunc := func(pattern string, handlerFunc func(http.ResponseWriter, *http.Request)) {
-		// Configure the "http.route" for the HTTP instrumentation.
-		handler := otelhttp.WithRouteTag(pattern, http.HandlerFunc(handlerFunc))
-		mux.Handle(pattern, handler)
-	}
-
-	// register our handlers
-	handleFunc(s.authCheckURL, s.authCheck)
-	handleFunc(s.authLoginURL, s.authLogin)
+	// Add the /auth/check and /auth/login endpoints.
+	mux.Handle(s.authCheckURL, otelhttp.NewHandler(http.HandlerFunc(s.authCheck), s.authCheckURL))
+	mux.Handle(s.authLoginURL, otelhttp.NewHandler(http.HandlerFunc(s.authLogin), s.authLoginURL))
 
 	// Add HTTP instrumentation for the whole server.
 	handler := otelhttp.NewHandler(mux, "/")
