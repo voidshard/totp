@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/golang-lru/v2/expirable"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // server is our HTTP server
@@ -132,12 +131,10 @@ func (s *server) newHTTPHandler() http.Handler {
 	mux := http.NewServeMux()
 
 	// Add the /auth/check and /auth/login endpoints.
-	mux.Handle(s.authCheckURL, otelhttp.NewHandler(http.HandlerFunc(s.authCheck), s.authCheckURL))
-	mux.Handle(s.authLoginURL, otelhttp.NewHandler(http.HandlerFunc(s.authLogin), s.authLoginURL))
+	mux.Handle(s.authCheckURL, otelWrapHandler(http.HandlerFunc(s.authCheck), s.authCheckURL))
+	mux.Handle(s.authLoginURL, otelWrapHandler(http.HandlerFunc(s.authLogin), s.authLoginURL))
 
-	// Add HTTP instrumentation for the whole server.
-	handler := otelhttp.NewHandler(mux, "/")
-	return handler
+	return mux
 }
 
 // authCheck is the handler for the /auth/check endpoint.
