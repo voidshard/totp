@@ -20,6 +20,7 @@ FROM scratch
 
 COPY --from=build /etc/passwd /etc/passwd
 COPY --from=build /totp /totp
+COPY --from=build /etc/ssl/certs/ /etc/ssl/certs/
 
 USER $USERNAME
 ENTRYPOINT ["/totp"]

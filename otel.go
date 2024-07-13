@@ -8,9 +8,14 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/trace"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+)
+
+var (
+	tracer trace.Tracer
 )
 
 // setupOTelSDK bootstraps the OpenTelemetry pipeline.
@@ -24,10 +29,12 @@ func setupOTelSDK(ctx context.Context) (func(), error) {
 	}
 
 	// Create a new tracer provider with a batch span processor and the otlp exporter
-	tp := trace.NewTracerProvider(trace.WithBatcher(exp))
+	tp := sdktrace.NewTracerProvider(sdktrace.WithBatcher(exp))
 
 	// Register the global Tracer provider
 	otel.SetTracerProvider(tp)
+
+	tracer = otel.Tracer("github.com/voidshard/totp")
 
 	// Register the W3C trace context and baggage propagators so data is propagated across services/processes
 	otel.SetTextMapPropagator(

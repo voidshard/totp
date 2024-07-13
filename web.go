@@ -13,6 +13,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/golang-lru/v2/expirable"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // server is our HTTP server
@@ -153,12 +156,17 @@ func (s *server) authCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = validateJWT(s.jwtKey, cookie.Value)
+	jwt, err := validateJWT(s.jwtKey, cookie.Value)
 	if err != nil {
 		log.Println("Invalid JWT:", err)
 		writeError(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+
+	span := trace.SpanFromContext(r.Context())
+	defer span.End()
+	span.AddEvent("Access approved")
+	span.SetAttributes(attribute.String("user", jwt.Username))
 
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
@@ -255,6 +263,11 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// login successful -- generate JWT
+	span := trace.SpanFromContext(r.Context())
+	defer span.End()
+	span.AddEvent("Access approved")
+	span.SetAttributes(attribute.String("user", userObj.Username))
+
 	jwtKey, err := newJWT(s.jwtKey, user, s.jwtSessionTTL)
 	log.Println("User logged in:", userObj.Username)
 	w.Header().Set("Location", s.redirect)
