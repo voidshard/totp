@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/golang-lru/v2/expirable"
 
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // server is our HTTP server
@@ -163,7 +162,7 @@ func (s *server) authCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	span := trace.SpanFromContext(r.Context())
+	_, span := tracer.Start(r.Context(), "access-approved")
 	defer span.End()
 	span.AddEvent("Access approved")
 	span.SetAttributes(attribute.String("user", jwt.Username))
@@ -263,7 +262,7 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// login successful -- generate JWT
-	span := trace.SpanFromContext(r.Context())
+	_, span := tracer.Start(r.Context(), "login-success")
 	defer span.End()
 	span.AddEvent("Access approved")
 	span.SetAttributes(attribute.String("user", userObj.Username))
