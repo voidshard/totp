@@ -208,7 +208,7 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		log.Println("Error parsing form:", err)
-		writeError(w, "Bad request", http.StatusBadRequest)
+		s.sendLoginPage(w, r, http.StatusBadRequest)
 		return
 	}
 
@@ -217,7 +217,7 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 	_, err = validateJWT(s.csrfKey, csrf)
 	if err != nil {
 		log.Println("Invalid CSRF token:", err)
-		writeError(w, "Unauthorized", http.StatusUnauthorized)
+		s.sendLoginPage(w, r, http.StatusUnauthorized)
 		return
 	}
 
@@ -225,7 +225,7 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 	_, ok := s.sessions.Get(csrf)
 	if ok {
 		log.Println("CSRF token already used")
-		writeError(w, "Unauthorized", http.StatusUnauthorized)
+		s.sendLoginPage(w, r, http.StatusUnauthorized)
 		return
 	}
 
@@ -235,14 +235,14 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 	user := r.Form.Get("user")
 	if !s.re.MatchString(user) {
 		log.Println("Invalid username:", user)
-		writeError(w, "Unauthorized", http.StatusUnauthorized)
+		s.sendLoginPage(w, r, http.StatusUnauthorized)
 		return
 	}
 
 	token := strings.Replace(r.Form.Get("token"), " ", "", -1)
 	if !s.re.MatchString(token) {
 		log.Println("Invalid token:", token)
-		writeError(w, "Unauthorized", http.StatusUnauthorized)
+		s.sendLoginPage(w, r, http.StatusUnauthorized)
 		return
 	}
 
@@ -250,14 +250,14 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 	userObj, err := s.store.User(user)
 	if err != nil {
 		log.Println("Error loading user:", err)
-		writeError(w, "Unauthorized", http.StatusUnauthorized)
+		s.sendLoginPage(w, r, http.StatusUnauthorized)
 		return
 	}
 
 	// validate the TOTP
 	if !validateTOTP(userObj.Secret, token) {
 		log.Println("Invalid TOTP")
-		writeError(w, "Unauthorized", http.StatusUnauthorized)
+		s.sendLoginPage(w, r, http.StatusUnauthorized)
 		return
 	}
 
@@ -278,6 +278,10 @@ func (s *server) loginPost(w http.ResponseWriter, r *http.Request) {
 // - generates a session / CSRF token
 // - returns the login form with the CSRF token
 func (s *server) loginGet(w http.ResponseWriter, r *http.Request) {
+	s.sendLoginPage(w, r, http.StatusOK)
+}
+
+func (s *server) sendLoginPage(w http.ResponseWriter, r *http.Request, statusOnSend int) {
 	// generate a new session
 	rng, err := randBytes(64)
 	if err != nil {
@@ -297,7 +301,7 @@ func (s *server) loginGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// return the login form with the CSRF token
-	writeIndex(w, s.authLoginURL, sessTkn)
+	writeIndex(w, s.authLoginURL, sessTkn, statusOnSend)
 }
 
 // writeCookie writes a cookie to the response.
@@ -312,9 +316,9 @@ func writeCookie(w http.ResponseWriter, name, value string) {
 }
 
 // writeIndex writes the login form to the response.
-func writeIndex(w http.ResponseWriter, loginURL, csrf string) {
+func writeIndex(w http.ResponseWriter, loginURL, csrf string, status int) {
 	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(status)
 	w.Write([]byte(fmt.Sprintf(`<html><head><title>Please Log In</title></head>
 <body><form action="%s" method="POST">
 <input placeholder="username" type="text" name="user">
